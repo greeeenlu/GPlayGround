@@ -6,11 +6,14 @@ var app = new Vue({
     data: {
         employees: emloyees,
         employee: {},
-        newEmployee: {}
+        newEmployee: {},
+        errors: [],
     },
     methods: {
         Create: function () {
-            console.log("hello");
+            if (!this.CheckForm(this.newEmployee)) {
+                return;
+            }
             axios({
                 method: 'post',
                 url: '/Employees/Create',
@@ -30,8 +33,13 @@ var app = new Vue({
         },
         Edit: function (employee) {
             this.employee = employee;
+            this.employee.birthday = moment(employee.birthday).format('YYYY-MM-DD');
+            this.errors = [];
         },
         Update: function () {
+            if (!this.CheckForm(this.employee)) {
+                return false;
+            }
             axios({
                 method: 'post',
                 url: '/Employees/Edit',
@@ -56,7 +64,6 @@ var app = new Vue({
             axios({
                 method: 'post',
                 url: '/Employees/Delete?id=' + employeeId,
-
             }).then(function (response) {
                 console.log(response);
                 window.location.reload();
@@ -64,8 +71,47 @@ var app = new Vue({
                     console.log(error);
                 });
         },
-        DateFormat: function(date) {
-            return moment(date, )
+        CheckForm: function(employee) {
+            this.errors = [];
+            if (!employee.name) {
+                this.errors.push("Name required.");
+            }
+            if (!employee.birthday) {
+                this.errors.push("birthday required.");
+            }
+            if (!employee.age) {
+                this.errors.push("age required.");
+            }
+            if (!employee.address) {
+                this.errors.push("address required.");
+            }
+
+            if (!employee.phone) {
+                this.errors.push('phone required.');
+            } else if (!this.validatePhone(employee.phone)) {
+                this.errors.push('Valid phone required.');
+            }
+            if (!this.errors.length) {
+                return true;
+            }
+            return false;
+        },
+        validEmail: function (email) {
+            var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+            return re.test(email);
+        },
+        validatePhone: function(phone) {
+            var re = /^09\d{2}-\d{6}$/;
+            return re.test(phone);
+        },
+        validateBirthday: function (date) {
+            var re = /^\d{4}\/\d{2}\/\d{2}$/ ;
+            return re.test(date);
+        }
+    },
+    filters: {
+        DateFormat: function (date) {
+            return moment(date).format('YYYY-MM-DD');
         }
     }
 });
